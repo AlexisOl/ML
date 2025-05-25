@@ -1,0 +1,39 @@
+
+
+  
+<p-card header="Vista Geografica">
+    <div class="card">
+        <p-splitter [style]="{ height: '300px' }" styleClass="mb-8">
+            <ng-template #panel>
+              <div class="flex items-center justify-center h-full w-full">
+                <div id="map" style="height: 100%; width: 100%;"></div>
+              </div>
+            </ng-template>
+            <ng-template #panel>
+                <div class="flex flex-col items-center justify-center h-full w-full gap-4 p-4 rounded-lg">
+  
+                    <p-inputgroup class="w-full max-w-md">
+                      <p-inputgroup-addon>
+                        <i class="pi pi-user"></i>
+                      </p-inputgroup-addon>
+                      <input pInputText [(ngModel)]="text1" placeholder="Username" class="w-full" />
+                    </p-inputgroup>
+                  
+                    <p-inputgroup class="w-full max-w-md">
+                      <p-inputgroup-addon>$</p-inputgroup-addon>
+                      <p-inputnumber [(ngModel)]="number" placeholder="Price" class="w-full" />
+                      <p-inputgroup-addon>.00</p-inputgroup-addon>
+                    </p-inputgroup>
+                  
+                    <p-inputgroup class="w-full max-w-md">
+                      <p-inputgroup-addon>www</p-inputgroup-addon>
+                      <input pInputText [(ngModel)]="text2" placeholder="Website" class="w-full" />
+                    </p-inputgroup>
+                    <p-button label="Buscar" severity="help" (onClick)="this.dibujarPorNombre()" />
+                  </div>
+                  
+            </ng-template>
+          </p-splitter>
+    </div>
+
+</p-card>

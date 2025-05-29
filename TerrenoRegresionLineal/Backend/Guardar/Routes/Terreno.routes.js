@@ -5,6 +5,9 @@ const departamentosControlador = require("../Controller/TerrrenoController")
 
 router.get("/", departamentosControlador.obtenerTodosDepartamentos)
 router.get("/porNombre/:ubicacion", departamentosControlador.terrenoUbicacion)
+router.post("/", departamentosControlador.guardarNuevo)
+
+
 
 
 module.exports = router

@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, inject, OnInit } from '@angular/core';
 import L from 'leaflet';
-import { Feature, Polygon } from 'geojson';
+import { Feature, MultiPolygon, Polygon } from 'geojson';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { SplitterModule } from 'primeng/splitter';
@@ -12,11 +12,14 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { TerrenoService } from '../services/terreno.service';
-import { terreno } from '../models/terreno';
+import { coordenadas, terreno } from '../models/terreno';
+import { TableModule } from 'primeng/table';
+import { UtilidadesService } from '../services/utilidades.service';
 @Component({
   selector: 'app-vista-general',
   imports: [ButtonModule, CardModule, SplitterModule, FormsModule, InputGroupModule,
-    InputGroupAddonModule, InputTextModule, SelectModule, InputNumberModule
+    InputGroupAddonModule, InputTextModule, SelectModule, InputNumberModule, TableModule,
+
   ],
   templateUrl: './vista-general.component.html',
   styleUrl: './vista-general.component.css'
@@ -24,15 +27,22 @@ import { terreno } from '../models/terreno';
 export class VistaGeneralComponent implements OnInit, AfterViewInit {
   private map!: L.Map;
   private poligonoActual: L.Layer | null = null;
-  text1!: string ;
+  private grupoPoligonos!: L.FeatureGroup;
+  text1!: string;
 
-  text2: string | undefined;
+  text2!: string;
+
+  text3!: string;
 
   number: string | undefined;
+  precio!: number
 
+  longitud!: number
+  latitud!: number
 
   // servicios
-  private terrenoServicio = inject(TerrenoService)
+  terrenoServicio = inject(TerrenoService)
+  utilidadServicio = inject(UtilidadesService)
   private terrenosGeneral: [number, number][] = []
 
 
@@ -42,7 +52,7 @@ export class VistaGeneralComponent implements OnInit, AfterViewInit {
 
   ngOnInit() {
 
-    if (this.map){
+    if (this.map) {
       this.drawPolygons();
       this.centerMap();
     }
@@ -52,27 +62,58 @@ export class VistaGeneralComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit() {
     this.initMap();
+    this.grupoPoligonos = L.featureGroup().addTo(this.map);
     this.terrenoServicio.getAllTerrenos().subscribe((todos: any) => {
       this.obtenerCoordenadas(todos)
     });
   }
-  
+
 
   obtenerCoordenadas(todos: any) {
     //eliminar todo
-    this.terrenosGeneral = []
+    this.grupoPoligonos.clearLayers();
+
+    if (this.poligonoActual) {
+      this.map.removeLayer(this.poligonoActual);
+    }
     todos.forEach((terreno: any) => {
       const nombre = terreno.denombre;
-      const coordenadas = terreno.geom.coordinates;
-      console.log(`Terrenos: ${nombre}`);
-      console.log('Coordenada:', coordenadas);
+      const precio = terreno.precio;
+      const area = terreno.dearea;
 
-      terreno.geom.coordinates.forEach((poligono: any) => {
-        poligono.forEach((anillo: any) => {
-          const coords = anillo.map((c: any) => [c[0], c[1]]);
-          this.terrenosGeneral.push(...coords);
-        });
-      });
+      const coordenadas = terreno.geom.coordinates;
+
+
+
+      const feature: Feature<MultiPolygon> = {
+        type: 'Feature',
+        geometry: {
+          type: 'MultiPolygon',
+          coordinates: coordenadas
+        },
+        properties: {
+          nombre,
+          precio,
+          area
+        }
+      };
+
+      const layer = L.geoJSON(feature, {
+        style: {
+          color: '#3388ff',
+          weight: 2,
+          fillColor: '#66ccff',
+          fillOpacity: 0.4
+        },
+        onEachFeature: (feature, layer) => {
+          if (feature.properties?.nombre) {
+
+            layer.bindPopup(`Terreno: ${feature.properties.nombre}, \n area: ${feature.properties.area}\n precio: ${feature.properties.precio}`);
+          }
+        }
+      }).addTo(this.map);
+
+      this.grupoPoligonos.addLayer(layer);
     });
     this.drawPolygons();
     this.centerMap();
@@ -85,7 +126,7 @@ export class VistaGeneralComponent implements OnInit, AfterViewInit {
     if (this.poligonoActual) {
       this.map.removeLayer(this.poligonoActual);
     }
-  
+
     const terrenos: Feature<Polygon> = {
       type: 'Feature',
       geometry: {
@@ -105,25 +146,78 @@ export class VistaGeneralComponent implements OnInit, AfterViewInit {
     }).addTo(this.map);
   }
 
-  dibujarPorNombre(){
+  dibujarPorNombre() {
     this.terrenoServicio.getAllTerrenosPorNombre(this.text1).subscribe(
       (terrenoEspecifico: any) => {
-      this.obtenerCoordenadas([terrenoEspecifico])
+        console.log('Terreno específico:', terrenoEspecifico);
+        this.obtenerCoordenadas([terrenoEspecifico])
 
       }
     )
   }
+  guardar() {
+
+    // generacioon de geometria
+
+    const geom = {
+      type: "MultiPolygon",
+      coordinates: [
+        [
+          this.terrenoServicio.getSignalCoordenadas().map(coord => [coord.longitud, coord.latitud])
+        ]
+      ]
+    };
+
+    const nuevoTerreno: terreno = {
+      decodigo: this.text1,
+      denombre: this.text2,
+      dearea: 0,
+      denorma: this.text3,
+      geom: geom,
+      precio: Number(this.precio)
+    }
+
+    console.log(nuevoTerreno);
+
+    this.terrenoServicio.ingresoNuevoTerreno(nuevoTerreno).subscribe(
+      (response) => {
+        this.utilidadServicio.mensajes('Éxito', 'El terreno fue creado correctamente.', 'success'); 
+    },
+    (error) => {
+        this.utilidadServicio.mensajes('Error', 'Hubo un problema al crear el terreno.', 'error'); 
+    }
+    );
+
+
+  }
 
   private initMap() {
     const baseMapURl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-    this.map = L.map('map').setView([-90.5, 14.6], 13);
+    this.map = L.map('map').setView([14.6, -90.5], 13);
+
     L.tileLayer(baseMapURl).addTo(this.map);
   }
 
   private centerMap() {
-    const bounds = L.latLngBounds(this.terrenosGeneral.map(
-      ([lng, lat]) => L.latLng(lat, lng)
-    ));
-    this.map.fitBounds(bounds);
+    if (this.grupoPoligonos.getLayers().length > 0) {
+      const bounds = this.grupoPoligonos.getBounds();
+      if (bounds.isValid()) {
+        this.map.fitBounds(bounds);
+      } else {
+        console.warn('Bounds no válidos, no se puede centrar el mapa');
+      }
+    }
   }
+
+  agregarCoordenada() {
+    const nuevo: coordenadas = {
+      latitud: Number(this.latitud),
+      longitud: Number(this.longitud)
+    }
+    this.terrenoServicio.agregarNuevaCoordenada(nuevo);
+    this.latitud = 0;
+    this.longitud = 0;
+  }
+
+
 }

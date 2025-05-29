@@ -3,7 +3,7 @@
   
 <p-card header="Vista Geografica">
     <div class="card">
-        <p-splitter [style]="{ height: '300px' }" styleClass="mb-8">
+        <p-splitter [style]="{ height: '1000px' }" styleClass="mb-8">
             <ng-template #panel>
               <div class="flex items-center justify-center h-full w-full">
                 <div id="map" style="height: 100%; width: 100%;"></div>
@@ -16,24 +16,68 @@
                       <p-inputgroup-addon>
                         <i class="pi pi-user"></i>
                       </p-inputgroup-addon>
-                      <input pInputText [(ngModel)]="text1" placeholder="Username" class="w-full" />
+                      <input pInputText [(ngModel)]="text1" placeholder="decodigo" class="w-full" />
                     </p-inputgroup>
                   
                     <p-inputgroup class="w-full max-w-md">
-                      <p-inputgroup-addon>$</p-inputgroup-addon>
-                      <p-inputnumber [(ngModel)]="number" placeholder="Price" class="w-full" />
-                      <p-inputgroup-addon>.00</p-inputgroup-addon>
+                      <input pInputText [(ngModel)]="text2" placeholder="denombre" class="w-full" />
+
                     </p-inputgroup>
                   
                     <p-inputgroup class="w-full max-w-md">
-                      <p-inputgroup-addon>www</p-inputgroup-addon>
-                      <input pInputText [(ngModel)]="text2" placeholder="Website" class="w-full" />
+                      <input pInputText [(ngModel)]="text3" placeholder="denorma" class="w-full" />
                     </p-inputgroup>
-                    <p-button label="Buscar" severity="help" (onClick)="this.dibujarPorNombre()" />
+
+                    <p-inputgroup class="w-full max-w-md">
+                      <input pInputText [(ngModel)]="precio" placeholder="precio" class="w-full" />
+                    </p-inputgroup>
+
+
+                    <label>Generacion de coordenas</label>
+
+                    <p-inputgroup class="w-full max-w-md">
+                      <p-inputgroup-addon>Latitud</p-inputgroup-addon>
+                      <input pInputText [(ngModel)]="latitud"class="w-full" />
+                      <p-inputgroup-addon>Longitud</p-inputgroup-addon>
+                      <input pInputText [(ngModel)]="longitud"  class="w-full" />
+                    <p-button severity="help" (onClick)="this.agregarCoordenada()" >
+                      <i class="pi pi-check" style="color: slateblue"></i>
+                    </p-button>
+
+                      
+                    </p-inputgroup>
+                    <div class="card w-full max-w-md">
+                      <p-table [value]="this.terrenoServicio.getSignalCoordenadas()" [tableStyle]="{ 'min-width': '50rem' }">
+                          <ng-template #header>
+                              <tr>
+                                  <th>latitud</th>
+                                  <th>longitud</th>
+                              </tr>
+                          </ng-template>
+                          <ng-template #body let-product>
+                              <tr>
+                                  <td>{{ product.latitud }}</td>
+                                  <td>{{ product.longitud }}</td>
+                              </tr>
+                          </ng-template>
+                      </p-table>
                   </div>
+                  <p-inputgroup class="w-full max-w-md">
+
+                    <p-button class="mr-2" label="Buscar" severity="help" (onClick)="this.dibujarPorNombre()" />
+                    <p-button label="Guardar" severity="help" (onClick)="this.guardar()" />
+                  </p-inputgroup>
+                  </div>
+
+                  <!-- confirma-->
+          
+
+                  <!-- muestra los valores que busca de un area-->
+                  
                   
             </ng-template>
           </p-splitter>
     </div>
+
 
 </p-card>

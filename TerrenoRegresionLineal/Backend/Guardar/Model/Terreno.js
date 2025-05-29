@@ -29,6 +29,14 @@ const departamentos = sequelize.define(
             type: DataTypes.GEOMETRY('MULTIPOLYGON', 4326),
             allowNull: true
         },
+        precio: {
+            type: DataTypes.DECIMAL,
+            allowNull: true,
+        },
+        centroide: {
+            type: DataTypes.GEOMETRY('POINT', 4326),
+            allowNull: true
+        },
         
 
     }, {
